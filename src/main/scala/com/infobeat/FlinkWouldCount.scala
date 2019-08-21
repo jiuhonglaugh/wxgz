@@ -5,8 +5,8 @@ import java.util.Properties
 import org.apache.flink.api.common.serialization.SimpleStringSchema
 import org.apache.flink.streaming.api.{CheckpointingMode, TimeCharacteristic}
 import org.apache.flink.streaming.api.scala.{DataStream, StreamExecutionEnvironment}
-import org.apache.flink.streaming.api.windowing.time.Time
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer
+import org.apache.flink.api.scala._
 
 object FlinkWouldCount {
 
@@ -25,17 +25,15 @@ object FlinkWouldCount {
     kafkaProps.setProperty("zookeeper.connect", ZOOKEEPER_HOST)
     kafkaProps.setProperty("bootstrap.servers", KAFKA_BROKER)
     kafkaProps.setProperty("group.id", TRANSACTION_GROUP)
+    val dStream = env.addSource(
+      new FlinkKafkaConsumer[String]("dianyou_wxgz",
+        new SimpleStringSchema(),
+        kafkaProps).setStartFromEarliest()
+    )
+    val result = dStream.flatMap(x => x.split(" "))
+      .map(x => (x, 1)).keyBy(0).sum(1)
 
-    val source: FlinkKafkaConsumer[String] = new FlinkKafkaConsumer[String]("dianyou_wxgz", new SimpleStringSchema(), kafkaProps)
-
-    source.setStartFromEarliest()
-
-    val dStream: DataStream[String] = env.addSource(source)
-    import org.apache.flink.api.scala._
-    val result = dStream.flatMap(x => x.split("\\s"))
-      .map(x => (x, 1)).keyBy(0).timeWindow(Time.seconds(2)).sum(1)
-
-    result.setParallelism(1).print()
+    result.print()
 
     env.execute("KafkaWordCount")
   }
