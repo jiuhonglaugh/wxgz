@@ -8,6 +8,9 @@ import org.apache.flink.streaming.api.scala.{DataStream, StreamExecutionEnvironm
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer
 import org.apache.flink.api.scala._
 
+/**
+ * zhu
+ */
 object FlinkWouldCount {
 
   private val ZOOKEEPER_HOST = "172.10.4.77:2181,172.10.4.78:2181,172.10.4.79:2181"
