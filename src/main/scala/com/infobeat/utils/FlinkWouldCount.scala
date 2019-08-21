@@ -1,13 +1,16 @@
-package com.infobeat
+package com.infobeat.utils
 
 import java.util.Properties
 
 import org.apache.flink.api.common.serialization.SimpleStringSchema
-import org.apache.flink.streaming.api.{CheckpointingMode, TimeCharacteristic}
 import org.apache.flink.streaming.api.scala.{DataStream, StreamExecutionEnvironment}
+import org.apache.flink.streaming.api.{CheckpointingMode, TimeCharacteristic}
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer
 import org.apache.flink.api.scala._
 
+/**
+ *
+ */
 object FlinkWouldCount {
 
   private val ZOOKEEPER_HOST = "172.10.4.77:2181,172.10.4.78:2181,172.10.4.79:2181"
@@ -25,7 +28,7 @@ object FlinkWouldCount {
     kafkaProps.setProperty("zookeeper.connect", ZOOKEEPER_HOST)
     kafkaProps.setProperty("bootstrap.servers", KAFKA_BROKER)
     kafkaProps.setProperty("group.id", TRANSACTION_GROUP)
-    val dStream = env.addSource(
+    val dStream: DataStream[String] = env.addSource(
       new FlinkKafkaConsumer[String]("dianyou_wxgz",
         new SimpleStringSchema(),
         kafkaProps).setStartFromEarliest()
