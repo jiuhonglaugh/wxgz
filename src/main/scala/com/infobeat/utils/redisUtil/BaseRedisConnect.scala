@@ -3,11 +3,8 @@ package com.infobeat.utils.redisUtil
 import java.util
 import java.util.Properties
 
-import com.infobeat.utils.Read_Filel
 import org.slf4j.LoggerFactory
 import redis.clients.jedis.{Jedis, JedisPool, JedisPoolConfig}
-
-import scala.util.control.Breaks
 
 class BaseRedisConnect {
 
@@ -18,7 +15,6 @@ class BaseRedisConnect {
   def this(pro: Properties) {
     this()
     this.pro = pro
-
   }
 
   def initPool(): Unit = {
@@ -74,6 +70,7 @@ class BaseRedisConnect {
       jedisPool.returnResource(jedis)
   }
 
+/*
   /**
    * 从redis中获取数据
    */
@@ -90,6 +87,7 @@ class BaseRedisConnect {
     } finally if (jedis != null) close(jedis)
     key
   }
+*/
 
   /**
    *
@@ -109,7 +107,7 @@ class BaseRedisConnect {
     keyes
   }
 
-  /**
+/*  /**
    * 根据 key 获取所有 Hash 数据
    *
    * @param keys  想要获取的key
@@ -126,5 +124,5 @@ class BaseRedisConnect {
         e.printStackTrace()
     } finally if (jedis != null) jedis.close()
     keyes
-  }
+  }*/
 }
