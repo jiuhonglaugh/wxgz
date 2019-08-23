@@ -1,7 +1,9 @@
 package com.infobeat.utils.redisUtil
 
 import java.util
+import java.util.Properties
 
+import com.infobeat.utils.Read_Filel
 import org.slf4j.LoggerFactory
 import redis.clients.jedis.{Jedis, JedisPool, JedisPoolConfig}
 
@@ -9,63 +11,63 @@ import scala.util.control.Breaks
 
 class BaseRedisConnect {
 
-  private var jedisPool: JedisPool = null
+  private var jedisPool: JedisPool = _
   private val LOGGER = LoggerFactory.getLogger(classOf[BaseRedisConnect])
+  private var pro: Properties = _
 
-  /**
-   * 初始化redis连接池
-   *
-   * @param dir redis配置文件地址
-   * @return
-   */
-  def getPool(dir: String): JedisPool = {
+  def this(pro: Properties) {
+    this()
+    this.pro = pro
+
+  }
+
+  def initPool(): Unit = {
     if (jedisPool == null) {
       val config = new JedisPoolConfig
       //控制一个pool可分配多少个jedis实例，通过pool.getJedis()来获取；
       //如果赋值为-1，则表示不限制；如果pool已经分配了maxActive个jedis实例，则此时pool的状态为exhausted(耗尽)。
-      config.setMaxTotal(50000)
+      config.setMaxTotal(pro.getProperty("MAX_TOTA").toInt)
       //控制一个pool最多有多少个状态为idle(空闲的)的jedis实例。
-      config.setMaxIdle(15)
+      config.setMaxIdle(pro.getProperty("MAX_IDLE").toInt)
       //表示当borrow(引入)一个jedis实例时，最大的等待时间，如果超过等待时间，则直接抛出JedisConnectionException；
-      config.setMaxWaitMillis(1000 * 100)
+      config.setMaxWaitMillis(pro.getProperty("MAX_WAIT_MILLIS").toLong)
       //在borrow一个jedis实例时，是否提前进行validate操作；如果为true，则得到的jedis实例均是可用的；
       config.setTestOnBorrow(true)
-      val serverip = "172.10.4.87"
-      val password = "idyredis87"
-      val timeOut = 30000
-      val port = 6379
-      //      LOGGER.warn("serverip {} ,password {}", serverip, password)
+      LOGGER.warn(s"Redis_Ip: ${pro.getProperty("IP")}   Pwd： ${pro.getProperty("PASSWD")}")
       try {
-        jedisPool = new JedisPool(config, serverip, port, timeOut, password)
+        jedisPool = new JedisPool(config,
+          pro.getProperty("IP"),
+          pro.getProperty("PORT").toInt,
+          pro.getProperty("TIME_OUT").toInt,
+          pro.getProperty("PASSWD"))
       } catch {
         case e: Exception =>
-          e.printStackTrace()
+          LOGGER.error("Redis Poll 初始化失败", e.printStackTrace())
       }
-      //      LOGGER.warn("连接池 {}", jedisPool.toString)
     }
-    jedisPool
+    LOGGER.warn(s"可用连接数： ${jedisPool.getNumActive}")
   }
 
   /**
    * 获取连接
    *
-   * @param dir
    * @return
    */
-  def getJedis(dir: String): Jedis = {
-    var resource: Jedis = null
+  def getJedis: Jedis = {
+    var conn: Jedis = null
     if (jedisPool != null) {
-      resource = jedisPool.getResource
+      conn = jedisPool.getResource
     } else {
-      resource = getPool(dir).getResource
+      initPool()
+      conn = jedisPool.getResource
     }
-    resource
+    conn
   }
 
   /**
    * 回收连接
    *
-   * @param jedis
+   * @param jedis redis 连接
    */
   def close(jedis: Jedis) {
     if (jedis != null)
@@ -76,42 +78,29 @@ class BaseRedisConnect {
    * 从redis中获取数据
    */
 
-  def get(key: String, dir: String): String = {
+  def get(key: String): String = {
     var jedis: Jedis = null
-    var value = ""
+    var key = ""
     try {
-      jedis = getJedis(dir)
-      val loop = new Breaks;
-      loop.breakable {
-        while (true) {
-          if (null != jedis)
-            loop.break()
-          else
-            jedis = getJedis(dir)
-        }
-      }
-      value = jedis.get(key)
+      jedis = getJedis
+      key = jedis.get(key)
     } catch {
       case e: Exception =>
         e.printStackTrace()
-    } finally if (jedis != null) jedis.close()
-    value
+    } finally if (jedis != null) close(jedis)
+    key
   }
 
-  def getKeys(keys: String, dir: String): java.util.Set[String] = {
+  /**
+   *
+   * @param keys 想要获取的redis-key
+   * @return
+   */
+  def getKeys(keys: String): java.util.Set[String] = {
     var jedis: Jedis = null
     var keyes: java.util.Set[String] = null
     try {
-      jedis = getJedis(dir)
-      val loop = new Breaks;
-      loop.breakable {
-        while (true) {
-          if (null != jedis)
-            loop.break()
-          else
-            jedis = getJedis(dir)
-        }
-      }
+      jedis = getJedis
       keyes = jedis.keys(keys)
     } catch {
       case e: Exception =>
@@ -119,14 +108,23 @@ class BaseRedisConnect {
     } finally if (jedis != null) jedis.close()
     keyes
   }
-}
 
-object a {
-  def main(args: Array[String]): Unit = {
-    val ba = new BaseRedisConnect
-    val jedis = ba.getJedis("")
-    val a: util.Map[String, String] = jedis.hgetAll("InterfaceKeyValue")
-    ba.close(jedis)
-    println(a.toString)
+  /**
+   * 根据 key 获取所有 Hash 数据
+   *
+   * @param keys  想要获取的key
+   * @return
+   */
+  def getHall(keys: String): util.Map[String, String] = {
+    var jedis: Jedis = null
+    var keyes: util.Map[String, String] = null
+    try {
+      jedis = getJedis
+      keyes = jedis.hgetAll(keys)
+    } catch {
+      case e: Exception =>
+        e.printStackTrace()
+    } finally if (jedis != null) jedis.close()
+    keyes
   }
 }
