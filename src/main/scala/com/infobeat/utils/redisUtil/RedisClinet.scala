@@ -8,7 +8,7 @@ import redis.clients.jedis.Jedis
 
 class RedisClinet extends RedisClientImpl {
 
-  private val LOGGER = LoggerFactory.getLogger(classOf[RedisClinet])
+  private final val LOGGER = LoggerFactory.getLogger(classOf[RedisClinet])
 
   /**
    * 从redis中获取数据

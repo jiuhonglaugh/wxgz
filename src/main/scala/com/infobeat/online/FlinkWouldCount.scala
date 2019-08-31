@@ -4,7 +4,7 @@ import com.infobeat.utils.Read_Filel
 import org.apache.flink.api.common.serialization.SimpleStringSchema
 import org.apache.flink.streaming.api.scala.{DataStream, StreamExecutionEnvironment}
 import org.apache.flink.streaming.api.{CheckpointingMode, TimeCharacteristic}
-import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer
+import org.apache.flink.streaming.connectors.kafka.{ FlinkKafkaConsumer010}
 import org.apache.flink.api.scala._
 
 /**
@@ -22,7 +22,7 @@ object FlinkWouldCount {
 
     val kafkaProps = Read_Filel.getPro("kafkaconsumer.properties")
     val dStream: DataStream[String] = env.addSource(
-      new FlinkKafkaConsumer[String](kafkaProps.getProperty("topic"),
+      new FlinkKafkaConsumer010[String](kafkaProps.getProperty("topic"),
         new SimpleStringSchema(),
         kafkaProps).setStartFromEarliest()
     )

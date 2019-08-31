@@ -1,6 +1,8 @@
 package com.infobeat.utils.redisUtil
 
+import java.lang.reflect.Field
 import java.util.Properties
+
 import org.slf4j.LoggerFactory
 import redis.clients.jedis.{Jedis, JedisPool, JedisPoolConfig}
 
