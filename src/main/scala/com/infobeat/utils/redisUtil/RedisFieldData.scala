@@ -8,16 +8,18 @@ import org.slf4j.LoggerFactory
 
 object RedisFieldData {
   private val LOGGER = LoggerFactory.getLogger(RedisFieldData.getClass)
-  //  private var userAttributeSet: util.HashSet[String, String] = _
-  var appkeyMap: util.Map[String, String] = new util.HashMap[String, String]
+  private var appkeyMap: util.Map[String, String] = _
 
   val redisPro: Properties = Read_Filel.getPro("redis.properties")
-  val rc = new RedisClinet()
+  private val rc = new RedisClinet()
 
-  def refeshMap(): Unit = {
-    val map = rc.getHall(redisPro.getProperty("APPKEY_TABLE"))
-    LOGGER.warn("总数 {}", map.size)
-    appkeyMap = map
+  def getAppkeyMap(): util.Map[String, String] = {
+    if (appkeyMap == null) {
+      val map = rc.getHall(redisPro.getProperty("APPKEY_TABLE"))
+      LOGGER.warn("总数 {}", map.size)
+      appkeyMap = map
+    }
+    appkeyMap
   }
 
   def getRedisSet(his: String): util.HashSet[String] = {
@@ -32,11 +34,4 @@ object RedisFieldData {
     tmpSet
   }
 
-  def main(args: Array[String]): Unit = {
-    getRedisSet(redisPro.getProperty("TERM_USER_ATTRIBUTE"))
-    for (i <- 1 to 100) {
-      Thread.sleep(2)
-      refeshMap()
-    }
-  }
 }

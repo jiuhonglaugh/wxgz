@@ -12,7 +12,7 @@ object RedisConnect {
   private val LOGGER = LoggerFactory.getLogger(RedisConnect.getClass)
   private val pro: Properties = RedisFieldData.redisPro
 
-  def initPool(): Unit = {
+  private def initPool(): Unit = {
     if (jedisPool == null) {
       LOGGER.warn(s"开始初始化 Redis 连接池")
       val config = new JedisPoolConfig

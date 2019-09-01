@@ -3,7 +3,7 @@ package com.infobeat.utils
 import java.text.SimpleDateFormat
 import java.util.{Date, Locale}
 
-object DataUtils {
+object DateUtils {
   /**
    *
    * @param urlTime

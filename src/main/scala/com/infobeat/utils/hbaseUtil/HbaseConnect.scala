@@ -1,12 +1,9 @@
 package com.infobeat.utils.hbaseUtil
 
-import java.io.{File, FileInputStream, InputStream}
-import java.util.Properties
-
 import com.infobeat.utils.Read_Filel
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.{HBaseConfiguration, TableName}
-import org.apache.hadoop.hbase.client.{Connection, ConnectionFactory, Get}
+import org.apache.hadoop.hbase.client.{Connection, ConnectionFactory, Get, Table}
 import org.slf4j.LoggerFactory
 
 object HbaseConnect {
@@ -14,17 +11,17 @@ object HbaseConnect {
   private val LOGGER = LoggerFactory.getLogger(this.getClass)
   private var conf: Configuration = _
   private var conn: Connection = _
-  private val hbasePro = Read_Filel.getPro("hbase.properties")
+  private val hbasePro = HbaseUtil.getHbasePro
 
   /**
    * 初始化habse连接
    */
-  def init(): Unit = {
+  private def init(): Unit = {
     if (conf == null) {
-      conf = HBaseConfiguration.create
-      conf.set("hbase.zookeeper.property.clientPort",hbasePro.getProperty("hbase.zk.port"))
-      conf.set("hbase.zookeeper.quorum",hbasePro.getProperty("hbase.zk.quorum"))
-      conf.set("hbase.master",hbasePro.getProperty("hbase.master"))
+      conf = HBaseConfiguration.create()
+      conf.set("hbase.zookeeper.property.clientPort", hbasePro.getProperty("hbase.zk.port"))
+      conf.set("hbase.zookeeper.quorum", hbasePro.getProperty("hbase.zk.quorum"))
+      conf.set("hbase.master", hbasePro.getProperty("hbase.master"))
     }
     try {
       conn = ConnectionFactory.createConnection(conf)
@@ -45,9 +42,19 @@ object HbaseConnect {
     conn
   }
 
+  /**
+   * 根据表名获取一个 table 对象
+   *
+   * @param tableName 表名称
+   * @return
+   */
+  def getTable(tableName: String): Table = {
+    getHbaseConn().getTable(TableName.valueOf(tableName))
+  }
+
   def main(args: Array[String]): Unit = {
-    val table = getHbaseConn().getTable(TableName.valueOf("test"))
-    val get = new Get("001|56D6CE9002573BE5".getBytes())
+    val table = getHbaseConn().getTable(TableName.valueOf("wxgz_scenes_data"))
+    val get = new Get("002|AA|774030284007961".getBytes())
     val result = table.get(get)
     for (kv <- result.rawCells()) {
       println(new String(kv.getQualifier))
