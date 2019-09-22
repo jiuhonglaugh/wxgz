@@ -4,6 +4,7 @@ import java.util
 import java.util.Properties
 
 import com.infobeat.utils.Read_Filel
+import com.infobeat.utils.redisUtil.impl.RedisClientImpl
 import org.slf4j.LoggerFactory
 
 object RedisFieldData {
@@ -11,9 +12,9 @@ object RedisFieldData {
   private var appkeyMap: util.Map[String, String] = _
 
   val redisPro: Properties = Read_Filel.getPro("redis.properties")
-  private val rc = new RedisClinet()
+  private val rc: RedisClientImpl = new RedisClinet()
 
-  def getAppkeyMap(): util.Map[String, String] = {
+  def getAppkeyMap: util.Map[String, String] = {
     if (appkeyMap == null) {
       val map = rc.getHall(redisPro.getProperty("APPKEY_TABLE"))
       LOGGER.warn("总数 {}", map.size)

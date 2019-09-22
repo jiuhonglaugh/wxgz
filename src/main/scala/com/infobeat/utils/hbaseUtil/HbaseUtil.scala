@@ -1,9 +1,7 @@
 package com.infobeat.utils.hbaseUtil
 
 
-import java.util
 import java.util.Properties
-
 import com.infobeat.utils.Read_Filel
 import org.apache.flink.streaming.api.scala.DataStream
 import org.apache.hadoop.hbase.CellUtil
@@ -21,12 +19,12 @@ object HbaseUtil {
     val date = new java.util.Date()
     val publicJson = new JSONObject()
     val qualifierFilter: QualifierFilter = new QualifierFilter(CompareFilter.CompareOp.NOT_EQUAL, new SubstringComparator("_")) //列名不包含过滤器 不包含_
-    val result = hbaseClient.getKey(rowKey, hbasePro.get("hbase.table.wxgz").toString, qualifierFilter)
+    val result = hbaseClient.getKey(rowKey, hbasePro.getProperty("hbase.table.wxgz"))
     for (kv <- result.rawCells()) {
-      publicJson.put(new String(kv.getQualifier), new String(kv.getValue))
+      publicJson.put(new String(CellUtil.cloneQualifier(kv)), new String(CellUtil.cloneValue(kv)))
     }
-    val time = (new java.util.Date().getTime - date.getTime) / 1000
-    LOGGER.warn(s"$rowKey 本次查询耗时：$time")
+    val time = new java.util.Date().getTime - date.getTime
+    LOGGER.warn(s"单条RowKey $rowKey 查询耗时：$time 毫秒")
     publicJson
   }
 
@@ -36,7 +34,7 @@ object HbaseUtil {
     val start_get = System.currentTimeMillis()
     val resultArr = hbaseClient.getKeys(rowKeyList, tableName, filter)
     val hbaseMap = new java.util.HashMap[String, String]
-    if (resultArr.size > 0) {
+    if (resultArr.length > 0) {
       for (result <- resultArr) {
         if (!result.isEmpty) {
           val hbaseJson = new JSONObject()
@@ -48,7 +46,7 @@ object HbaseUtil {
             hbaseMap.put(rowKey, hbaseJson.toString)
           }
           val end_get = System.currentTimeMillis()
-          LOGGER.warn(s"results大小= + ${hbaseMap.size()}  ,耗时： + ${(end_get - start_get)} 毫秒")
+          LOGGER.warn(s"results大小= + ${hbaseMap.size()}  ,耗时： + ${end_get - start_get} 毫秒")
         } else {
           LOGGER.warn(s"根据RowKeyList未查询到指定的数据： ${rowKeyList.toString()} ")
         }
@@ -66,10 +64,10 @@ object HbaseUtil {
    * @return
    */
   def getRowKeyOfData(deviceId: String, appkey_rowKey: String): String = {
-    val deviceIdHashCode = appkey_rowKey.hashCode
+    val hashCode = appkey_rowKey.hashCode
     val regionSpilte = hbasePro.getProperty("hbase.rowKey.build.mod").toInt
     //取正数绝对值
-    val abs = Math.abs(deviceIdHashCode)
+    val abs = Math.abs(hashCode)
     //取模
     val getMod = abs % regionSpilte
     val newRowKey = "00" + getMod + "|" + appkey_rowKey
@@ -92,17 +90,24 @@ object HbaseUtil {
     filter
   }
 
-  def getNeedFileds(): Set[String] = {
+  def getNeedFileds: Set[String] = {
     hbasePro.getProperty("need_filed").split(",").toSet
   }
 
-  def getHbasePro(): Properties = {
+  def getHbasePro: Properties = {
     this.hbasePro
   }
 
+  /**
+   * 获取RowKey LIST
+   *
+   * @param filterDS Dstream 流
+   * @return
+   */
   def getList(filterDS: DataStream[String]): List[String] = {
     import org.apache.flink.api.scala._
     var arr: List[String] = null
+    filterDS.print()
     filterDS.map(log => {
       val logJson = new JSONObject(log)
       val appkey = logJson.get("appKey").toString

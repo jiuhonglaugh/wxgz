@@ -1,5 +1,6 @@
 package com.infobeat.utils
 
+import org.apache.flink.configuration.Configuration
 import org.apache.flink.streaming.api.scala.StreamExecutionEnvironment
 
 /**
@@ -30,5 +31,12 @@ object Flink_Util {
    */
   def creatSEE(parallelism: Int): StreamExecutionEnvironment = {
     StreamExecutionEnvironment.createLocalEnvironment(parallelism)
+  }
+
+  def createSeeWebUi: StreamExecutionEnvironment = {
+    val conf: Configuration = new Configuration()
+    import org.apache.flink.configuration.ConfigConstants
+    conf.setBoolean(ConfigConstants.LOCAL_START_WEBSERVER, true)
+    StreamExecutionEnvironment.createLocalEnvironmentWithWebUI(conf)
   }
 }

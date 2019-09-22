@@ -47,9 +47,9 @@ trait HbaseClientimpl {
 
   /**
    *
-   * @param rowKey  hbaseRowKey
-   * @param tableName hbase表名
-   * @param mcfilter  过滤器
+   * @param rowKetList hbaseRowKey
+   * @param tableName  hbase表名
+   * @param mcfilter   过滤器
    * @return
    */
   def getKeys(rowKetList: List[String], tableName: String, mcfilter: MultipleColumnPrefixFilter): Array[Result]
